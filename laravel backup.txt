@@ -1,0 +1,100 @@
+////////////////////////////////////////////////////////////////////////////////////////
+				spatie laravel backup setup
+////////////////////////////////////////////////////////////////////////////////////////
+
+// installation
+composer require spatie/laravel-backup
+or
+composer require spatie/laravel-backup:7.0
+or
+composer require spatie/laravel-backup --ignore-platform-req=ext-zip
+
+app/provider:
+Spatie\Backup\BackupServiceProvider::class,
+
+php artisan vendor:publish --provider="Spatie\Backup\BackupServiceProvider"
+
+// full backup
+php artisan backup:run
+// specific folder backup
+php artisan backup:run --only-to-disk=name-of-your-disk
+// only database backup
+php artisan backup:run --only-db
+// only files backup
+php artisan backup:run --only-files
+// only database backup without email notification
+php artisan backup:run --only-db --disable-notifications
+
+// show backup lists
+php artisan backup:list
+
+
+// app/Console/Kernel.php
+
+protected function schedule(Schedule $schedule)
+{
+   $schedule->command('backup:clean')->daily()->at('01:00');
+   $schedule->command('backup:run')->daily()->at('01:30');
+}
+
+or
+$schedule->command('backup:run')->daily()->at('01:00')->onFailure(function () {
+         ...
+      })->onSuccess(function () {
+         ...
+      });
+
+
+// clean database
+php artisan backup:clean
+
+
+//manually delete the oldest backup:
+// Retrieve an instance of `Spatie\Backup\BackupDestination\Backup`
+$backup = $backups->oldestBackup();
+// Bye bye backup
+$backup->delete();
+
+
+////////////////////////////////////////////////////////////////////////////////////////
+				laravel-backup-panel setup
+////////////////////////////////////////////////////////////////////////////////////////
+
+composer require pavel-mironchik/laravel-backup-panel
+
+php artisan laravel-backup-panel:install
+
+--------------------------------------------------------------------------------
+This will do the following:
+
+place CSS files into public/vendor/laravel_backup_panel directory
+place Blade templates into resources/views/vendor/laravel_backup_panel directory
+add config file config/laravel_backup_panel.php
+register service provider app/Providers/LaravelBackupPanelServiceProvider.php
+----------------------------------------------------------------------------------
+
+php artisan vendor:publish --tag=laravel-backup-panel-assets --force
+php artisan vendor:publish --tag=laravel-backup-panel-views --force
+
+----------------------------------------------------------------------------------------------
+You are free to tune CSS styles in the public/vendor/laravel_backup_panel directory 
+and change the layout in the resources/views/vendor/laravel_backup_panel directory as you want.
+----------------------------------------------------------------------------------------------
+
+
+Laravel Backup Panel exposes a dashboard at /backup. Change it in config/laravel_backup_panel.php file:
+'path' => 'backup', // change to 'path' => 'api/backup',
+
+
+----------------------------------------------------------------------------------------------------
+By default, you will only be able to access the dashboard in the local environment. To change that, 
+modify authorization gate in the app/Providers/LaravelBackupPanelServiceProvider.php:
+
+protected function gate()
+{
+    Gate::define('viewLaravelBackupPanel', function ($user) {
+        return in_array($user->email, [
+            'admin@your-site.com', // chage email who can access this backup
+        ]);
+    });
+}

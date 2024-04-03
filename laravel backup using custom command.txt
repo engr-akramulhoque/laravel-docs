@@ -1,0 +1,115 @@
+////////////////////////////////////////////////////////////////////////////////////////
+				Database backup using custom command
+////////////////////////////////////////////////////////////////////////////////////////
+
+php artisan make:command DatabaseBackup // create a artisan command inside App/Console/Commands
+
+=====================================================================================
+Change Configuration DatabaseBackup.php 
+
+1-> $signature = 'db:backup'/'mysql:backup'; // new command create like "php artisan db:backup"
+
+2-> $descreption = 'create database backup'
+
+3-> custom code write inside handle function: //write what this command can do?
+// DB Backup without inserting in database table 
+------------------------------------------------------------------------------------------------------------
+public function handle(){
+	// decler filename
+	$filename = "backup_".strtotime(now()).".sql";
+	// build connection with the databse 
+	$command = "mysqldump --host=".env(DB_HOST)." --user=".env(DB_USERNAME)." 
+		--password=".env(DB_PASSWORD)." ".env(DB_DATABASE)." > ".storage_path()."/app/backup/".$filename; 
+
+	exec($command);
+}
+------------------------------------------------------------------------------------------------------------
+
+// DB Backup with inserting into database table
+[
+1-> php artisan make:model DatabaseBackup -m
+
+2-> Inside migration add $table -> string('filename')->nullable();
+3-> Inside model add 'filename',
+] 
+------------------------------------------------------------------------------------------------------------
+use App\Models\DatabaseBackup;
+
+public function handle(){
+	// decler filename
+	$filename = "backup_".strtotime(now()).".sql";
+	// build connection with the databse 
+	$command = "mysqldump --host=".env(DB_HOST)." --user=".env(DB_USERNAME)." 
+		--password=".env(DB_PASSWORD)." ".env(DB_DATABASE)." > ".storage_path()."/app/backup/".$filename; 
+
+	DatabaseBackup::create([
+		'filename'=> $filename,
+	]);
+	exec($command);
+}
+
+
+mysqldump error ======
+Add inside Config/Database.php
+'dump' => [
+                'dump_binary_path' => 'C:/laragon/bin/mysql/mysql-8.0.30-winx64/bin/',
+                'use_single_transaction',
+                'timeout' => 60 * 5,
+            ],
+------------------------------------------------------------------------------------------------------------
+
+4-> register this command into App/Console/Kernel.php
+
+//protected $commands = [
+//	"App\Console\Commands\DatabaseBackup"
+//];
+
+5-> scheduling this command // run this command autometically 
+
+protected function schedule(Schedule $schedule)
+{
+	$schedule->command('db:backup/msql:backup')->weekly(); // daily()/hourly()/yearly()
+}
+
+// check command register or not
+6-> php artisan
+
+
+
+================================================================================
+Advance learning
+
+
+// download this backup file
+Route::get('files/{file_name}', function($file_name = null)
+{
+    $path = storage_path().'/'.'app'.'/files/'.$file_name;
+    if (file_exists($path)) {
+        return Response::download($path);
+    }
+});
+
+or 
+
+Route::get('/download/{path}/', 'MyController@get_file');
+
+<?php
+    
+namespace App\Http\Controllers;
+    
+use App\Http\Controllers\Controller;
+    
+class MyController extends Controller
+{
+    public function get_file($path)
+    {
+        /**this will force download your file**/
+        return response()->download($path);
+    }
+}
+
+or // Download File from Storage Folder
+Route::get('download/files/{filename}', function($filename) {
+  $file = Storage::disk('uploadedfiles')->download($filename);
+  return $file;
+});

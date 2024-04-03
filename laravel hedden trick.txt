@@ -1,0 +1,11 @@
+Config::put('app.app_name', 'Dynamic App Name');
+
+
+
+
+
+
+ $envInstance = new EnvController;
+        $env_update = $envInstance->updateEnv([
+            'APP_NAME'   => 'laravel shdhd',
+        ]);

@@ -1,0 +1,15 @@
+calling from config file;
+
+if(empty($perameter)){
+	config('sluggish.value')
+}
+
+else{
+	$perameter
+}
+
+
+
+github release tag adding:
+ git tag -t v1.0 -m "Release version 1.1"
+git push --follow-tags

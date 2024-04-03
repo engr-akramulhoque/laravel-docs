@@ -1,0 +1,26 @@
+======================================Importent steps for Api Authentication==============================
+----------------------------------------------------------------------------------------------------------
+Insall Breeze Api
+
+create file->
+	routes/auth.php
+	routes/guest.php
+
+inside RouteServiceProviders->
+	Route::middleware('api')
+                ->prefix('api')
+                ->group(base_path('routes/guest.php'));
+
+inside .env->
+	SANCTUM_STATEFUL_DOMAINS='*'
+
+
+inside config/cors->
+change From
+	'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000')],
+	To
+	'allowed_origins' => ['*'],
+
+Generate token & pass->
+ 	$token = $request->user()->createToken($request->token_name); || $user->createToken('token_name');
+    	return response()->json(['token' => $token->plainTextToken]);
